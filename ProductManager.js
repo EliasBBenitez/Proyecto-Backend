@@ -1,40 +1,56 @@
+const fs = require('fs');
+
 class ProductManager {
-    constructor() {
-      this.products = [];
-      this.idCounter = 1;
-    }
-  
-    addProduct(product) {
-      if (this.products.some(p => p.code === product.code)) {
-        console.error('El código del producto ya existe');
-        return;
-      }
-  
-      if (!product.title || !product.description || !product.price ||
-          !product.thumbnail || !product.code || !product.stock) {
-        console.error('Todos los campos son obligatorios');
-        return;
-      }
-  
-      this.products.push({
-        id: this.idCounter++,
-        ...product
-      });
-    }
-  
-    getProducts() {
-      return this.products;
-    }
-  
-    getProductById(id) {
-      const product = this.products.find(p => p.id === id);
-  
-      if (product) {
-        return product;
-      } else {
-        console.error('Producto no encontrado');
-        return null;
-      }
+  constructor(path) {
+    this.path = path;
+  }
+
+  addProduct(product) {
+    const products = this.getProducts();
+    const newProduct = {
+      id: products.length + 1,
+      ...product
+    };
+    products.push(newProduct);
+    this.saveProducts(products);
+    return newProduct;
+  }
+
+  getProducts() {
+    try {
+      const fileContent = fs.readFileSync(this.path, 'utf-8');
+      return JSON.parse(fileContent);
+    } catch (error) {
+      return [];
     }
   }
+
+  getProductById(id) {
+    const products = this.getProducts();
+    return products.find(product => product.id === id);
+  }
+
+  updateProduct(id, fieldsToUpdate) {
+    const products = this.getProducts();
+    const updatedProducts = products.map(product => {
+      if (product.id === id) {
+        return { ...product, ...fieldsToUpdate };
+      }
+      return product;
+    });
+    this.saveProducts(updatedProducts);
+  }
+
+  deleteProduct(id) {
+    const products = this.getProducts();
+    const filteredProducts = products.filter(product => product.id !== id);
+    this.saveProducts(filteredProducts);
+  }
+
+  saveProducts(products) {
+    fs.writeFileSync(this.path, JSON.stringify(products, null, 2), 'utf-8');
+  }
+}
+
 module.exports = ProductManager;
+
