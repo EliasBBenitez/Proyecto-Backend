@@ -10,7 +10,3 @@ manager.addProduct({
   code: 'PROD1',
   stock: 10
 });
-
-console.log(manager.getProducts());
-
-console.log(manager.getProductById(1));
